@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Model Chat</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f4ef;
+      --ink: #202b28;
+      --muted: #68736f;
+      --line: #d9ded8;
+      --green: #285c4b;
+      --green-light: #e5eee8;
+      --white: #fff;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: radial-gradient(#dce2dc 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+    }
+
+    main {
+      width: min(100% - 32px, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 0 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 4px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 11px;
+      color: white;
+      background: var(--green);
+      font-family: Georgia, serif;
+      font-size: 21px;
+    }
+
+    h1 { margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: 600; }
+    .subtitle { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+
+    #conversation {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 28px 4px;
+    }
+
+    .welcome {
+      margin: auto;
+      max-width: 420px;
+      text-align: center;
+      animation: arrive 420ms ease-out both;
+    }
+
+    .welcome h2 { margin: 0 0 8px; font: 500 27px/1.2 Georgia, serif; }
+    .welcome p { margin: 0; color: var(--muted); line-height: 1.6; }
+
+    .message {
+      max-width: min(82%, 600px);
+      padding: 13px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--white);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      animation: arrive 180ms ease-out both;
+    }
+
+    .message.user { align-self: flex-end; border-color: #c8d9ce; background: var(--green-light); }
+    .message.assistant { align-self: flex-start; }
+    .message.error { color: #8c342d; border-color: #e8c9c4; }
+
+    form {
+      padding: 12px;
+      border: 1px solid #cfd6cf;
+      border-radius: 14px;
+      background: rgb(255 255 255 / 92%);
+      box-shadow: 0 8px 24px rgb(35 54 46 / 7%);
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      padding: 8px;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      line-height: 1.5;
+    }
+
+    textarea::placeholder { color: #89928d; }
+    .controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 4px 0; }
+    label { color: var(--muted); font-size: 12px; }
+
+    input {
+      width: 74px;
+      margin-left: 5px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+    }
+
+    button {
+      min-width: 92px;
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 8px;
+      color: white;
+      background: var(--green);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover { background: #1e493b; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #7caa93; outline-offset: 2px; }
+
+    @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; }
+    }
+
+    @media (max-width: 480px) {
+      main { width: min(100% - 22px, 760px); padding-top: 18px; }
+      #conversation { padding: 22px 2px; }
+      .message { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="mark" aria-hidden="true">M</div>
+      <div>
+        <h1>Model Chat</h1>
+        <p class="subtitle">A conversation with your local model</p>
+      </div>
+    </header>
+
+    <section id="conversation" aria-live="polite" aria-label="Conversation">
+      <div class="welcome" id="welcome">
+        <h2>What would you like to explore?</h2>
+        <p>Send a message to start a conversation.</p>
+      </div>
+    </section>
+
+    <form id="chat-form">
+      <textarea id="message" name="message" placeholder="Write a message..." aria-label="Message" required></textarea>
+      <div class="controls">
+        <label for="max-tokens">Response length
+          <input id="max-tokens" name="max_new_tokens" type="number" min="1" max="2048" value="100">
+        </label>
+        <button id="send" type="submit">Send</button>
+      </div>
+    </form>
+  </main>
+  <script>
+    const form = document.querySelector("#chat-form");
+    const input = document.querySelector("#message");
+    const conversation = document.querySelector("#conversation");
+    const sendButton = document.querySelector("#send");
+
+    function addMessage(text, role, isError = false) {
+      document.querySelector("#welcome")?.remove();
+      const message = document.createElement("div");
+      message.className = `message ${role}${isError ? " error" : ""}`;
+      message.textContent = text;
+      conversation.append(message);
+      message.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return message;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      input.value = "";
+      sendButton.disabled = true;
+      sendButton.textContent = "Thinking...";
+      const pending = addMessage("Generating response...", "assistant");
+
+      try {
+        const response = await fetch("/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            max_new_tokens: Number(document.querySelector("#max-tokens").value) || 100
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "The request failed.");
+        pending.textContent = data.response;
+      } catch (error) {
+        pending.classList.add("error");
+        pending.textContent = error.message || "Could not reach the model. Please try again.";
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+        input.focus();
+      }
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+  </script>
+</body>
+</html>
