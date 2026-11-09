@@ -1,3 +1,4 @@
+# GitHub Actions workflow to build and push Docker image to AWS ECR
 name: Build and push to ECR
 
 on:
