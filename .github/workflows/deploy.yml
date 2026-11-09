@@ -25,6 +25,9 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Download model from S3
+        run: aws s3 sync s3://llm-serving-s3-020139096729-eu-west-1-an/models/ models/ --no-progress
+
       - name: Build and push image
         run: |
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/llm-serving-webpage:latest .

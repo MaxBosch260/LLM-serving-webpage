@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "models/SmolLM2-135M-Instruct")
 
 # Holds the loaded model and tokenizer so that they are shared across requests instead of being reloaded on every call.
 model_state = {}
